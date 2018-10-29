@@ -1,6 +1,6 @@
-var  mongoose= require('mongoose');
+const  mongoose= require('mongoose');
 
-var  transactionSchema= new mongoose.Schema({
+let  transactionSchema= new mongoose.Schema({
     trans_id : String,
     user_id  : String,
     name     : String,
@@ -8,5 +8,4 @@ var  transactionSchema= new mongoose.Schema({
     date     : Date
   //  is_Recurring: Boolean
 });
-
-module.exports= mongoose.model('Transaction',transactionSchema);
+module.exports= mongoose.model('Transaction',transactionSchema);;

@@ -1,8 +1,8 @@
-var express = require('express');
-var transactionModel = require('./../models/transaction');
-var recurringGroupModel = require('./../models/recurringTransactionsGroup');
-var async = require('async');
-var router = express.Router();
+const express = require('express');
+const transactionModel = require('./../models/transaction');
+const recurringGroupModel = require('./../models/recurringTransactionsGroup');
+const async = require('async');
+const router = express.Router();
 
 router.post('/', function(req, res) {
   createTransaction(req, res);
@@ -20,25 +20,37 @@ async function createTransaction(req, res, next) {
   let transactions = req.body.transactions;
   for (let i = 0; i < transactions.length; i++) {
     let transaction = transactions[i];
-    var transactionObj = new transactionModel({
+    let transactionObj = new transactionModel({
       trans_id: transaction.trans_id,
       user_id: transaction.user_id,
       name: transaction.name,
       amount: transaction.amount,
       date: transaction.date,
     });
-    await transactionObj.save()
+
+    let isRecordNotExist=false;
+    await transactionModel.findOne({name:transaction.name,trans_id:transaction.trans_id,user_id:transaction.user_id,amount:transaction.amount,date:transaction.date},(err,result)=>
+        {
+         if(!result)
+          isRecordNotExist=true;
+        }
+      );
+
+    if(isRecordNotExist)
+     {
+      await transactionObj.save()
       .then(item => {
 
 
       })
       .catch(err => {
-        /*console.log("Error in writing to db");
-       const error = new Error('Please try again');
+         console.log("Error in writing to db");
+         const error = new Error('Please try again');
          error.httpStatusCode = 400;
-         next(error);*/
+         next(error);
       });
-    await createRecurringGroup(transactionObj);
+      await createRecurringGroup(transactionObj);
+    }
   }
   await getRecurringTransactions(req, res);
 }
@@ -47,24 +59,32 @@ function createRecurringGroup(transaction) {
   let name = transaction.name.split(' ')[0];
   let user_id = transaction.user_id;
   let transactionAmt = transaction.amount;
-  recurringGroupModel.findOne({
+  recurringGroupModel.find({
     'name': name,
     'user_id': user_id,
     'next_amt': {
-      "$gte": transactionAmt / 1.1,
-      "$lte": transactionAmt / 0.9
+      "$gte": transactionAmt / 1.2,
+      "$lte": transactionAmt / 0.8
     }
-  }, (err, recurringTransactions) => {
+  }, (err, recurringTransactionGroups) => {
     if (err) {
-
+         const error = new Error('Please try again');
+         error.httpStatusCode = 400;
+         next(error);
     } else {
 
-      if (recurringTransactions) {
+      if (recurringTransactionGroups) {
 
-        
-        predictNextTransactionDetailsAndSave(recurringTransactions,transaction)
-        
-        
+       let isRecurringGroupFound=false;
+    
+       for(let i=0;i<recurringTransactionGroups.length;i++)
+       { 
+        isRecurringGroupFound=predictNextTransactionDetailsAndSave(recurringTransactionGroups[i],transaction);
+       }
+       if(!isRecurringGroupFound)
+       {
+        createNewRecurringGroup(transaction)
+       } 
       } else {
         createNewRecurringGroup(transaction)
       }
@@ -78,6 +98,7 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
 {
   let transactions = recurringTransactionGroup.transactions;
   let noOfTransasctions=transactions.length;  
+  let isRecurringGroupFound=false;
   if (noOfTransasctions > 1) {
       let interval = recurringTransactionGroup.interval;
       let nextDateInMilliSec = recurringTransactionGroup.next_date.getTime();
@@ -88,7 +109,14 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
         recurringTransactionGroup.next_amt = transaction.amount;
         recurringTransactionGroup.transactions.push(transaction);
         recurringTransactionGroup.save();
-  }
+        isRecurringGroupFound=true;
+       }
+      /* else
+       {
+         createNewRecurringGroup(transaction);
+       }*/
+
+
         } else {
           //case where only transaction is there 
           let possibleNextDate = [];
@@ -131,15 +159,19 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
             recurringTransactionGroup.transactions.push(transaction);
             recurringTransactionGroup.is_recurringGroup = true;
             recurringTransactionGroup.save();
-          } else {
-            createNewRecurringGroup(transaction);
+            isRecurringGroupFound=true;
           }
+        /*   else {
+            createNewRecurringGroup(transaction);
+          }*/
 
+       
         }
+        return isRecurringGroupFound;
 }
 
 function createNewRecurringGroup(transaction) {
-    var recurringGroup = new recurringGroupModel();
+    let recurringGroup = new recurringGroupModel();
     recurringGroup.name = transaction.name.split(' ')[0];
     recurringGroup.user_id = transaction.user_id;
     recurringGroup.next_amt = transaction.amount;
@@ -160,7 +192,9 @@ function getRecurringTransactions(req, res) {
     .populate('transactions', ['trans_id', 'user_id', 'name', 'amount', 'date']).exec(
       (err, recurringTransactions) => {
         if (err) {
-          console.log(err);
+         const error = new Error('Please try again');
+         error.httpStatusCode = 400;
+         next(error);
         } else {
           res.send(recurringTransactions);
         }

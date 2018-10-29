@@ -1,7 +1,7 @@
-var  mongoose= require('mongoose');
-var Transaction=require('./../models/transaction')
+const  mongoose= require('mongoose');
+const Transaction=require('./../models/transaction')
 
-var  recurringTransactionsgroupSchema= new mongoose.Schema({
+let  recurringTransactionsgroupSchema= new mongoose.Schema({
     user_id : String,
     name  : String,
     next_amt    : Number,
