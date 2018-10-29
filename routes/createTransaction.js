@@ -99,6 +99,7 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
   let transactions = recurringTransactionGroup.transactions;
   let noOfTransasctions=transactions.length;  
   let isRecurringGroupFound=false;
+  //if there is more than one transactions belonging to the group
   if (noOfTransasctions > 1) {
       let interval = recurringTransactionGroup.interval;
       let nextDateInMilliSec = recurringTransactionGroup.next_date.getTime();
@@ -111,16 +112,10 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
         recurringTransactionGroup.save();
         isRecurringGroupFound=true;
        }
-      /* else
-       {
-         createNewRecurringGroup(transaction);
-       }*/
-
 
         } else {
-          //case where only transaction is there 
+          //if there is only one transaction belonging in the group
           let possibleNextDate = [];
-          //existing transaction date
           let existingTransactionDate = recurringTransactionGroup.next_date;
           let transactionDateMilliSec = transaction.date.getTime();
           let flag = false;
@@ -160,12 +155,7 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
             recurringTransactionGroup.is_recurringGroup = true;
             recurringTransactionGroup.save();
             isRecurringGroupFound=true;
-          }
-        /*   else {
-            createNewRecurringGroup(transaction);
-          }*/
-
-       
+          }       
         }
         return isRecurringGroupFound;
 }
