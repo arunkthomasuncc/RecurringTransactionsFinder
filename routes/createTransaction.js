@@ -5,6 +5,7 @@ const async = require('async');
 const router = express.Router();
 
 router.post('/', function(req, res) {
+  console.log("inside post");
   createTransaction(req, res);
 
 });
@@ -17,7 +18,9 @@ router.get('/', function(req, res) {
 async function createTransaction(req, res, next) {
 
 
-  let transactions = req.body.transactions;
+ let transactions = req.body.transactions;
+// let transactions = req.body;
+
   for (let i = 0; i < transactions.length; i++) {
     let transaction = transactions[i];
     let transactionObj = new transactionModel({
@@ -94,7 +97,7 @@ function createRecurringGroup(transaction) {
 
 }
 
-function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transaction)
+async function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transaction)
 {
   let transactions = recurringTransactionGroup.transactions;
   let noOfTransasctions=transactions.length;  
@@ -108,9 +111,11 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
         let nextPredictedDate = new Date(nextDateInMilliSec + (interval * 24 * 60 * 60 * 1000));
         recurringTransactionGroup.next_date = nextPredictedDate;
         recurringTransactionGroup.next_amt = transaction.amount;
+        recurringTransactionGroup.is_recurringGroup=true;
         recurringTransactionGroup.transactions.push(transaction);
-        recurringTransactionGroup.save();
         isRecurringGroupFound=true;
+        await recurringTransactionGroup.save();
+        
        }
 
         } else {
@@ -152,9 +157,10 @@ function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transact
             recurringTransactionGroup.next_date = nextDate;
             recurringTransactionGroup.interval = interval;
             recurringTransactionGroup.transactions.push(transaction);
-            recurringTransactionGroup.is_recurringGroup = true;
-            recurringTransactionGroup.save();
+            //recurringTransactionGroup.is_recurringGroup = true;
             isRecurringGroupFound=true;
+           await recurringTransactionGroup.save();
+            
           }       
         }
         return isRecurringGroupFound;
