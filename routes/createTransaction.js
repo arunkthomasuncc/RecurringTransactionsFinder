@@ -62,13 +62,28 @@ function createRecurringGroup(transaction) {
   let name = transaction.name.split(' ')[0];
   let user_id = transaction.user_id;
   let transactionAmt = transaction.amount;
+  let maxAmount=0;
+  let minAmount=0;
+  if(transactionAmt>=0)
+  {
+     maxAmount= transactionAmt*1.51;
+     minAmount=transactionAmt*0.49;
+  }
+  else
+  {
+    minAmount=transactionAmt*1.51;
+    maxAmount=transactionAmt*0.49;
+  }
+
   recurringGroupModel.find({
     'name': name,
     'user_id': user_id,
-    'next_amt': {
-      "$gte": transactionAmt / 1.2,
-      "$lte": transactionAmt / 0.8
-    }
+    'next_amt': { 
+ //     "$gte": transactionAmt / 1.51,
+  //    "$lte": transactionAmt / 0.49
+         "$lte": maxAmount,
+         "$gte": minAmount
+    } 
   }, (err, recurringTransactionGroups) => {
     if (err) {
          const error = new Error('Please try again');
@@ -177,9 +192,13 @@ function createNewRecurringGroup(transaction) {
     recurringGroup.interval = 0;
     recurringGroup.save();
 }
-function getRecurringTransactions(req, res) {
+function getRecurringTransactions(req, res,next) {
+
+  let d = new Date();
+  d.setMonth(d.getMonth() - 4);
   recurringGroupModel.find({
-      is_recurringGroup: true
+      'is_recurringGroup': true,
+      'next_date' : {"$gte": d }
     }, ['name', 'user_id', 'next_amt', 'next_date', 'transactions'], {
       sort: {
         name: 1
