@@ -5,8 +5,7 @@ const async = require('async');
 const router = express.Router();
 
 router.post('/', function(req, res) {
-  console.log("inside post");
-  createTransaction(req, res);
+   createTransaction(req, res);
 
 });
 router.get('/', function(req, res) {
@@ -113,7 +112,6 @@ function createRecurringGroup(transaction) {
 
   });
 
-  console.log("finished");
 }
 
 async function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transaction)
@@ -198,7 +196,6 @@ function createNewRecurringGroup(transaction) {
 }
  function  getRecurringTransactions(req, res,next) {
 
-  console.log("inside get");
   let d = new Date();
   d.setMonth(d.getMonth() - 4);
   recurringGroupModel.find({
@@ -216,8 +213,7 @@ function createNewRecurringGroup(transaction) {
          error.httpStatusCode = 400;
          next(error);
         } else {
-          console.log("got resuklt");
-          console.log(recurringTransactions);
+
           res.send(recurringTransactions);
         }
       } 
