@@ -18,8 +18,8 @@ router.get('/', function(req, res) {
 async function createTransaction(req, res, next) {
 
 
- let transactions = req.body.transactions;
-// let transactions = req.body;
+// let transactions = req.body.transactions;
+ let transactions = req.body;
 
   for (let i = 0; i < transactions.length; i++) {
     let transaction = transactions[i];
@@ -55,7 +55,10 @@ async function createTransaction(req, res, next) {
       await createRecurringGroup(transactionObj);
     }
   }
-  await getRecurringTransactions(req, res);
+
+   setTimeout(function()
+    {getRecurringTransactions(req, res);
+    },2000);
 }
 
 function createRecurringGroup(transaction) {
@@ -110,6 +113,7 @@ function createRecurringGroup(transaction) {
 
   });
 
+  console.log("finished");
 }
 
 async function predictNextTransactionDetailsAndSave(recurringTransactionGroup,transaction)
@@ -192,8 +196,9 @@ function createNewRecurringGroup(transaction) {
     recurringGroup.interval = 0;
     recurringGroup.save();
 }
-function getRecurringTransactions(req, res,next) {
+ function  getRecurringTransactions(req, res,next) {
 
+  console.log("inside get");
   let d = new Date();
   d.setMonth(d.getMonth() - 4);
   recurringGroupModel.find({
@@ -211,6 +216,8 @@ function getRecurringTransactions(req, res,next) {
          error.httpStatusCode = 400;
          next(error);
         } else {
+          console.log("got resuklt");
+          console.log(recurringTransactions);
           res.send(recurringTransactions);
         }
       } 

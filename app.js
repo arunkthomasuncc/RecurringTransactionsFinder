@@ -1,9 +1,9 @@
-var timeout = require('express-timeout-handler');
-var express= require('express');
-var bodyParser=require("body-parser");
+const timeout = require('express-timeout-handler');
+const express= require('express');
+const bodyParser=require("body-parser");
 const mongoose = require('./dbConfig/mongoose');
-var app=express();
-var options = {
+const app=express();
+let options = {
  
   // Optional. This will be the default timeout for all endpoints.
   // If omitted there is no default timeout on endpoints
@@ -35,9 +35,10 @@ var options = {
 app.use(timeout.handler(options));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-var transactionRouter=require('./routes/createTransaction');
-app.use('/createTransaction',transactionRouter);
-app.use('/getRecurringTransaction',transactionRouter);
+let transactionRouter=require('./routes/createTransaction');
+//app.use('/createTransaction',transactionRouter);
+//app.use('/getRecurringTransaction',transactionRouter);
+app.use('/',transactionRouter);
 
 
 app.use(function(err, req, res, next) {
